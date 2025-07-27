@@ -1,6 +1,6 @@
 # Claude Code Hooks Mastery
 
-[Claude Code Hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) - Quickly master how to use Claude Code hooks to add deterministic (or non-deterministic) control over Claude Code's behavior.
+[Claude Code Hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) - Quickly master how to use Claude Code hooks to add deterministic (or non-deterministic) control over Claude Code's behavior. Plus learn about [Claude Code Sub-Agents](#claude-code-sub-agents) and the powerful [Meta-Agent](#the-meta-agent).
 
 <img src="images/hooked.png" alt="Claude Code Hooks" style="max-width: 800px; width: 100%;" />
 
@@ -11,7 +11,8 @@ This requires:
 - **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** - Anthropic's CLI for Claude AI
 
 Optional:
-- **[ElevenLabs](https://elevenlabs.io/)** - Text-to-speech provider
+- **[ElevenLabs](https://elevenlabs.io/)** - Text-to-speech provider (with MCP server integration)
+- **[ElevenLabs MCP Server](https://github.com/elevenlabs/elevenlabs-mcp)** - MCP server for ElevenLabs
 - **[OpenAI](https://openai.com/)** - Language model provider + Text-to-speech provider
 - **[Anthropic](https://www.anthropic.com/)** - Language model provider
 
@@ -371,9 +372,86 @@ Options:
 6. **Avoid Infinite Loops**: Check `stop_hook_active` flag in Stop hooks
 7. **Test Thoroughly**: Verify hooks work correctly in safe environments
 
+## Claude Code Sub-Agents
+
+> Watch [this YouTube video](https://youtu.be/7B2HJr0Y68g) to see how to create and use Claude Code sub-agents effectively.
+>
+> See the [Claude Code Sub-Agents documentation](https://docs.anthropic.com/en/docs/claude-code/sub-agents) for more details.
+
+<img src="images/subagents.png" alt="Claude Code Sub-Agents" style="max-width: 800px; width: 100%;" />
+
+Claude Code supports specialized sub-agents that handle specific tasks with custom prompts, tools, and separate context windows.
+
+**Agent Storage:**
+- **Project agents**: `.claude/agents/` (higher priority, project-specific)
+- **User agents**: `~/.claude/agents/` (lower priority, available across all projects)
+- **Format**: Markdown files with YAML frontmatter
+
+**Agent File Structure:**
+```yaml
+---
+name: agent-name
+description: When to use this agent (critical for automatic delegation)
+tools: Tool1, Tool2, Tool3  # Optional - inherits all tools if omitted
+color: Cyan  # Visual identifier in terminal
+---
+
+# Purpose
+You are a [role definition]. 
+
+## Instructions
+1. Step-by-step instructions
+2. What the agent should do
+3. How to report results
+
+## Report/Response Format
+Specify how the agent should communicate results back to the primary agent.
+```
+
+Sub-agents enable:
+- **Task specialization** - Code reviewers, debuggers, test runners
+- **Context preservation** - Each agent operates independently  
+- **Tool restrictions** - Grant only necessary permissions
+- **Automatic delegation** - Claude proactively uses the right agent
+
+### Key Engineering Insights
+
+**Two Critical Mistakes to Avoid:**
+
+1. **Misunderstanding the System Prompt** - What you write in agent files is the *system prompt*, not a user prompt. This changes how you structure instructions and what information is available to the agent.
+
+2. **Ignoring Information Flow** - Sub-agents respond to your primary agent, not to you. Your primary agent prompts sub-agents based on your original request, and sub-agents report back to the primary agent, which then reports to you.
+
+**Best Practices:**
+- Use the `description` field to tell your primary agent *when* and *how* to prompt sub-agents
+- Include phrases like "use PROACTIVELY" or trigger words (e.g., "if they say TTS") in descriptions
+- Remember sub-agents start fresh with no context - be explicit about what they need to know
+- Follow Problem → Solution → Technology approach when building agents
+
+### The Meta-Agent
+
+The meta-agent (`.claude/agents/meta-agent.md`) is a specialized sub-agent that generates new sub-agents from descriptions. It's the "agent that builds agents" - a critical tool for scaling your agent development velocity.
+
+**Why Meta-Agent Matters:**
+- **Rapid Agent Creation** - Build dozens of specialized agents in minutes instead of hours
+- **Consistent Structure** - Ensures all agents follow best practices and proper formatting
+- **Live Documentation** - Pulls latest Claude Code docs to stay current with features
+- **Intelligent Tool Selection** - Automatically determines minimal tool requirements
+
+**Using the Meta-Agent:**
+```bash
+# Simply describe what you want
+"Build a new sub-agent that runs tests and fixes failures"
+
+# Claude Code will automatically delegate to meta-agent
+# which will create a properly formatted agent file
+```
+
+The meta-agent follows the principle: "Figure out how to scale it up. Build the thing that builds the thing." This compound effect accelerates your engineering capabilities exponentially.
+
 ## Master AI Coding
 > And prepare for Agentic Engineering
 
-Learn to code with AI with foundational [Principles of AI Coding](https://agenticengineer.com/principled-ai-coding?y=cchookmast)
+Learn to code with AI with foundational [Principles of AI Coding](https://agenticengineer.com/principled-ai-coding?y=ccsubagents)
 
 Follow the [IndyDevDan youtube channel](https://www.youtube.com/@indydevdan) for more AI coding tips and tricks.

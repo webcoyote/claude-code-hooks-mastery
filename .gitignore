@@ -103,3 +103,8 @@ coverage/
 .cache/
 tmp/
 temp/
+
+
+.mcp.json
+
+output
