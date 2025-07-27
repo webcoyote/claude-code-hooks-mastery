@@ -13,6 +13,7 @@ This requires:
 Optional:
 - **[ElevenLabs](https://elevenlabs.io/)** - Text-to-speech provider (with MCP server integration)
 - **[ElevenLabs MCP Server](https://github.com/elevenlabs/elevenlabs-mcp)** - MCP server for ElevenLabs
+- **[Firecrawl MCP Server](https://www.firecrawl.dev/mcp)** - Web scraping and crawling MCP server (my favorite scraper)
 - **[OpenAI](https://openai.com/)** - Language model provider + Text-to-speech provider
 - **[Anthropic](https://www.anthropic.com/)** - Language model provider
 
