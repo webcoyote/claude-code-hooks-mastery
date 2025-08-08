@@ -14,6 +14,12 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 
+# Add utils directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
+from utils.logging import log_to_jsonl
+from utils.tts import speak_text
+from utils.git import get_git_status, get_recent_github_issues
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -21,69 +27,10 @@ except ImportError:
     pass  # dotenv is optional
 
 
-def log_session_start(input_data):
-    """Log session start event to logs directory."""
-    # Ensure logs directory exists
-    log_dir = Path("logs")
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = log_dir / 'session_start.jsonl'
-    
-    # Append new data as a single line to JSONL file
-    with open(log_file, 'a') as f:
-        json.dump(input_data, f)
-        f.write('\n')
 
 
-def get_git_status():
-    """Get current git status information."""
-    try:
-        # Get current branch
-        branch_result = subprocess.run(
-            ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        current_branch = branch_result.stdout.strip() if branch_result.returncode == 0 else "unknown"
-        
-        # Get uncommitted changes count
-        status_result = subprocess.run(
-            ['git', 'status', '--porcelain'],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        if status_result.returncode == 0:
-            changes = status_result.stdout.strip().split('\n') if status_result.stdout.strip() else []
-            uncommitted_count = len(changes)
-        else:
-            uncommitted_count = 0
-        
-        return current_branch, uncommitted_count
-    except Exception:
-        return None, None
 
 
-def get_recent_issues():
-    """Get recent GitHub issues if gh CLI is available."""
-    try:
-        # Check if gh is available
-        gh_check = subprocess.run(['which', 'gh'], capture_output=True)
-        if gh_check.returncode != 0:
-            return None
-        
-        # Get recent open issues
-        result = subprocess.run(
-            ['gh', 'issue', 'list', '--limit', '5', '--state', 'open'],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
-    except Exception:
-        pass
-    return None
 
 
 def load_development_context(source):
@@ -121,7 +68,7 @@ def load_development_context(source):
                 pass
     
     # Add recent issues if available
-    issues = get_recent_issues()
+    issues = get_recent_github_issues()
     if issues:
         context_parts.append("\n--- Recent GitHub Issues ---")
         context_parts.append(issues)
@@ -146,8 +93,8 @@ def main():
         session_id = input_data.get('session_id', 'unknown')
         source = input_data.get('source', 'unknown')  # "startup", "resume", or "clear"
         
-        # Log the session start event
-        log_session_start(input_data)
+        # Log the session start event using shared utility
+        log_to_jsonl(input_data, 'session_start.jsonl')
         
         # Load development context if requested
         if args.load_context:
@@ -165,26 +112,13 @@ def main():
         
         # Announce session start if requested
         if args.announce:
-            try:
-                # Try to use TTS to announce session start
-                script_dir = Path(__file__).parent
-                tts_script = script_dir / "utils" / "tts" / "pyttsx3_tts.py"
-                
-                if tts_script.exists():
-                    messages = {
-                        "startup": "Claude Code session started",
-                        "resume": "Resuming previous session",
-                        "clear": "Starting fresh session"
-                    }
-                    message = messages.get(source, "Session started")
-                    
-                    subprocess.run(
-                        ["uv", "run", str(tts_script), message],
-                        capture_output=True,
-                        timeout=5
-                    )
-            except Exception:
-                pass
+            messages = {
+                "startup": "Claude Code session started",
+                "resume": "Resuming previous session",
+                "clear": "Starting fresh session"
+            }
+            message = messages.get(source, "Session started")
+            speak_text(message, timeout=5)
         
         # Success
         sys.exit(0)

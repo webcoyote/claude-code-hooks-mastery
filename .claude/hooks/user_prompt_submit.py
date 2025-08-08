@@ -13,24 +13,15 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
+# Add utils directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
+from utils.logging import log_to_jsonl
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
     pass  # dotenv is optional
-
-
-def log_user_prompt(session_id, input_data):
-    """Log user prompt to logs directory."""
-    # Ensure logs directory exists
-    log_dir = Path("logs")
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = log_dir / 'user_prompt_submit.jsonl'
-    
-    # Append new data as a single line to JSONL file
-    with open(log_file, 'a') as f:
-        json.dump(input_data, f)
-        f.write('\n')
 
 
 def validate_prompt(prompt):
@@ -70,8 +61,8 @@ def main():
         session_id = input_data.get('session_id', 'unknown')
         prompt = input_data.get('prompt', '')
         
-        # Log the user prompt
-        log_user_prompt(session_id, input_data)
+        # Log the user prompt using shared utility
+        log_to_jsonl(input_data, 'user_prompt_submit.jsonl')
         
         # Validate prompt if requested and not in log-only mode
         if args.validate and not args.log_only:

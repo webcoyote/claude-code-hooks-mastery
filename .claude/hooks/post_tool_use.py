@@ -8,20 +8,17 @@ import os
 import sys
 from pathlib import Path
 
+# Add utils directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
+from utils.logging import log_to_jsonl
+
 def main():
     try:
         # Read JSON input from stdin
         input_data = json.load(sys.stdin)
         
-        # Ensure logs directory exists
-        log_dir = Path("logs")
-        log_dir.mkdir(parents=True, exist_ok=True)
-        log_file = log_dir / 'post_tool_use.jsonl'
-        
-        # Append new data as a single line to JSONL file
-        with open(log_file, 'a') as f:
-            json.dump(input_data, f)
-            f.write('\n')
+        # Log the post-tool use event using shared utility
+        log_to_jsonl(input_data, 'post_tool_use.jsonl')
         
         sys.exit(0)
         

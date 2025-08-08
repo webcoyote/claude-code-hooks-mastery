@@ -8,6 +8,10 @@ import sys
 import re
 from pathlib import Path
 
+# Add utils directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
+from utils.logging import log_to_jsonl
+
 def is_dangerous_rm_command(command):
     """
     Comprehensive detection of dangerous rm commands.
@@ -104,15 +108,8 @@ def main():
                 print("BLOCKED: Dangerous rm command detected and prevented", file=sys.stderr)
                 sys.exit(2)  # Exit code 2 blocks tool call and shows error to Claude
         
-        # Ensure logs directory exists
-        log_dir = Path("logs")
-        log_dir.mkdir(parents=True, exist_ok=True)
-        log_file = log_dir / 'pre_tool_use.jsonl'
-        
-        # Append new data as a single line to JSONL file
-        with open(log_file, 'a') as f:
-            json.dump(input_data, f)
-            f.write('\n')
+        # Log the pre-tool use event using shared utility
+        log_to_jsonl(input_data, 'pre_tool_use.jsonl')
         
         sys.exit(0)
         
